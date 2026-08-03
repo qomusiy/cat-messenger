@@ -1,0 +1,74 @@
+# Render Blueprint — Cat Messenger deploys as a STATIC SITE.
+#
+# There is no server of ours anywhere in the request path: the browser speaks
+# MTProto straight to Telegram's data centres over WebSocket, and the code
+# console runs in a Web Worker in the same tab. Render only ever hands out
+# files. That matters for cost and uptime — Render spins down free *Web
+# Services* after inactivity, but Static Sites are served from its CDN and
+# never sleep.
+#
+# Set up: Render dashboard → New → Blueprint → pick this repo.
+
+services:
+  - type: web
+    runtime: static
+    name: cat-messenger
+    # corepack picks up pnpm@11 from package.json's `packageManager` field, so the
+    # build doesn't depend on whatever pnpm Render happens to ship.
+    # `pnpm build` = typecheck → changelog → vite build → fold public/ into dist/
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    staticPublishPath: ./dist
+    # Only rebuild when something that reaches the bundle changes.
+    buildFilter:
+      ignoredPaths:
+        - 'e2e/**'
+        - '**/*.md'
+
+    envVars:
+      # Must satisfy package.json engines (^22.18.0 || >=24.11.0). Pinned to the
+      # version the build was verified on — see also .node-version.
+      - key: NODE_VERSION
+        value: 24.16.0
+      # The bundle is large; the default heap is not always enough to build it.
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=4096
+      # corepack asks for confirmation before fetching a package manager it
+      # hasn't cached. There's no one to answer on a build server.
+      - key: COREPACK_ENABLE_DOWNLOAD_PROMPT
+        value: '0'
+      # Skip sourcemaps: ~30MB of the dist, only useful for local debugging.
+      - key: SOURCEMAP
+        value: '0'
+      # Your own credentials from https://my.telegram.org/apps.
+      # `sync: false` = Render prompts for the value and stores it in the
+      # dashboard instead of this file, so it never lands in git.
+      # These OVERRIDE the committed defaults in .env — Vite gives process.env
+      # priority over .env files for VITE_-prefixed keys.
+      - key: VITE_API_ID
+        sync: false
+      - key: VITE_API_HASH
+        sync: false
+
+    # Deliberately NO catch-all `/* -> /index.html` SPA rewrite. tweb routes
+    # entirely in the URL hash — appNavigationController's pushState passes no
+    # URL and replaceState only rewrites `url.hash`, so the path is always "/".
+    # A catch-all would buy nothing and cost two things: it can shadow real
+    # files under /assets/**, and it turns every genuine 404 into a 200 serving
+    # HTML, which hides missing assets instead of surfacing them.
+
+    headers:
+      # The shell and the version marker must never be served stale, or clients
+      # pin themselves to an old bundle after a deploy. Everything else Vite
+      # emits is content-hashed and safe to cache hard.
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+      - path: /version
+        name: Cache-Control
+        value: no-cache
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: same-origin

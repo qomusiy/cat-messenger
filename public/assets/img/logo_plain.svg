@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Bare glyph, no background: this is used as a masked notification badge,
+     so only its alpha matters — keep it a single solid silhouette. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="332" height="372" viewBox="96 92 332 372">
+	<g fill="#FFFFFF" stroke="#FFFFFF" stroke-linejoin="round">
+		<path d="M132 216 L146 104 L212 178 Z" stroke-width="20"/>
+		<path d="M380 216 L366 104 L300 178 Z" stroke-width="20"/>
+		<path d="M176 356 L134 442 C130 451 139 458 147 453 L242 394 Z" stroke-width="16"/>
+		<rect x="100" y="172" width="312" height="216" rx="80" stroke="none"/>
+	</g>
+</svg>
