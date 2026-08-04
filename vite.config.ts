@@ -11,6 +11,7 @@ import {existsSync, copyFileSync, readFileSync} from 'fs';
 import {ServerOptions} from 'vite';
 import {watchLangFile} from './watch-lang.js';
 import devChecks from './scripts/dev-checks.mjs';
+import syncPyodide from './scripts/sync-pyodide.mjs';
 import path from 'path';
 
 const rootDir = resolve(__dirname);
@@ -21,6 +22,13 @@ const LANG_PACK_LOCAL_FILE_PATH = path.join(rootDir, 'src', 'langPackLocalVersio
 const isDEV = process.env.NODE_ENV === 'development';
 if(!existsSync(LANG_PACK_LOCAL_FILE_PATH)) {
   copyFileSync(path.join(rootDir, 'src', 'langPackLocalVersion.example.ts'), LANG_PACK_LOCAL_FILE_PATH);
+}
+
+// The script console's Python runtime. Mirrored out of node_modules instead of
+// committed; see scripts/sync-pyodide.mjs. Skipped under vitest, which never
+// serves the assets and shouldn't pay ~13MB of file I/O to start a unit test.
+if(!process.env.VITEST) {
+  syncPyodide();
 }
 
 if(isDEV) {

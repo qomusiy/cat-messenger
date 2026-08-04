@@ -1,143 +1,96 @@
-.overlay {
+/*
+ * Every colour here resolves to a Telegram theme variable, so the console
+ * follows day / night / tinted / light with no palette of its own. The only
+ * literals are the syntax-token hues, which need a wider gamut than the app's
+ * five semantic colours can provide — those are defined once on `.root` and
+ * flipped under `.night`.
+ */
+
+.root {
   position: fixed;
   inset: 0;
   z-index: 1000;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, .55);
-}
-
-.panel {
-  display: flex;
   flex-direction: column;
-  width: min(1180px, 94vw);
-  height: min(820px, 90vh);
-  overflow: hidden;
-  border-radius: .75rem;
   background-color: var(--background-color);
-  box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, .4);
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  gap: .75rem;
-  padding: .75rem 1rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.title {
-  font-weight: 500;
-  font-size: 1.0625rem;
-}
-
-.subtitle {
-  color: var(--secondary-text-color);
+  color: var(--primary-text-color);
   font-size: .8125rem;
+
+  // Chrome surfaces. The app has no dedicated "panel" colour, so these are
+  // derived: a hair of contrast against --background-color in both directions.
+  --console-chrome: var(--surface-color);
+  --console-raised: rgba(127, 127, 127, .08);
+  --console-hover: rgba(127, 127, 127, .12);
+  --console-active: rgba(var(--primary-color-rgb), .12);
+
+  // Syntax tokens — tuned for light backgrounds, overridden below for dark.
+  --code-keyword: #af00db;
+  --code-builtin: #0070c1;
+  --code-string: #178a5a;
+  --code-number: #b8500a;
+  --code-comment: #6a7a86;
+  --code-function: #6f42c1;
+  --code-decorator: #b8500a;
+  --code-operator: #7a3e9d;
+  --code-class: #1f7a99;
+}
+
+:global(.night) .root {
+  --console-raised: rgba(255, 255, 255, .05);
+  --console-hover: rgba(255, 255, 255, .09);
+
+  --code-keyword: #c792ea;
+  --code-builtin: #82aaff;
+  --code-string: #7ec699;
+  --code-number: #f78c6c;
+  --code-comment: #6b7c8a;
+  --code-function: #b3a1ff;
+  --code-decorator: #ffcb6b;
+  --code-operator: #c792ea;
+  --code-class: #7fd1e0;
 }
 
 .spacer {
   flex: 1;
 }
 
-.body {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
+/* ---- title bar --------------------------------------------------------- */
 
-.pane {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-}
-
-.pane + .pane {
-  border-left: 1px solid var(--border-color);
-}
-
-.paneHead {
+.titleBar {
   display: flex;
   align-items: center;
   gap: .5rem;
-  padding: .5rem .75rem;
+  flex-shrink: 0;
+  height: 2.75rem;
+  padding: 0 .5rem 0 .875rem;
+  background-color: var(--console-chrome);
   border-bottom: 1px solid var(--border-color);
+}
+
+.titleIcon {
+  color: var(--primary-color);
+  font-size: 1.125rem;
+}
+
+.titleText {
+  font-weight: 500;
+}
+
+.titlePath {
   color: var(--secondary-text-color);
-  font-size: .8125rem;
+
+  &::before {
+    content: '—';
+    margin-inline-end: .375rem;
+  }
 }
 
-.editor {
-  flex: 1;
-  padding: .75rem;
-  border: none;
-  outline: none;
-  resize: none;
-  background: transparent;
-  color: inherit;
-  font-family: 'Roboto Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  font-size: .8125rem;
-  line-height: 1.55;
-  tab-size: 2;
-}
-
-.output {
-  flex: 1;
-  overflow-y: auto;
-  padding: .5rem .75rem;
-  font-family: 'Roboto Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  font-size: .78125rem;
-  line-height: 1.5;
-}
-
-.line {
-  padding: .125rem 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.levelWarn {
-  color: #d98416;
-}
-
-.levelError {
-  color: #e2585e;
-}
-
-.levelSystem {
-  color: var(--secondary-text-color);
-  font-style: italic;
-}
-
-.jsonBlock {
-  margin: .375rem 0;
-  border: 1px solid var(--border-color);
-  border-radius: .375rem;
-  overflow: hidden;
-}
-
-.jsonHead {
+.runBtn {
   display: flex;
   align-items: center;
-  gap: .5rem;
-  padding: .3125rem .5rem;
-  background-color: rgba(127, 127, 127, .12);
-  color: var(--secondary-text-color);
-  font-size: .75rem;
-}
-
-.jsonBody {
-  max-height: 20rem;
-  overflow: auto;
-  margin: 0;
-  padding: .5rem;
-  white-space: pre;
-}
-
-.btn {
-  padding: .375rem .75rem;
+  gap: .3125rem;
+  height: 1.875rem;
+  padding: 0 .875rem;
   border: none;
   border-radius: .375rem;
   background-color: var(--primary-color);
@@ -147,39 +100,671 @@
   cursor: pointer;
 
   &:disabled {
-    opacity: .5;
+    opacity: .45;
     cursor: default;
   }
 }
 
-.btnGhost {
-  background-color: transparent;
-  color: var(--primary-color);
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  border: none;
+  border-radius: .375rem;
+  background: transparent;
+  color: var(--secondary-text-color);
+  font-size: 1.125rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: var(--console-hover);
+    color: var(--primary-text-color);
+  }
+
+  &:disabled {
+    opacity: .35;
+    cursor: default;
+  }
 }
 
-.select {
-  padding: .3125rem .5rem;
-  border: 1px solid var(--border-color);
-  border-radius: .375rem;
-  background-color: transparent;
+/* ---- shell ------------------------------------------------------------- */
+
+.main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.activityBar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 3rem;
+  padding-top: .25rem;
+  background-color: var(--console-chrome);
+  border-inline-end: 1px solid var(--border-color);
+}
+
+.activityBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  border: none;
+  background: transparent;
+  color: var(--secondary-text-color);
+  font-size: 1.375rem;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--primary-text-color);
+  }
+}
+
+.activityBtnActive {
+  color: var(--primary-color);
+
+  // The active-view marker every editor puts on this rail.
+  &::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: .5rem;
+    bottom: .5rem;
+    width: 2px;
+    background-color: var(--primary-color);
+  }
+}
+
+.sideBar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 17rem;
+  min-height: 0;
+  background-color: var(--console-chrome);
+  border-inline-end: 1px solid var(--border-color);
+}
+
+.sideHead {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  flex-shrink: 0;
+  height: 2.25rem;
+  padding: 0 .375rem 0 .875rem;
+  color: var(--secondary-text-color);
+  font-size: .6875rem;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.sideAction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: .25rem;
+  background: transparent;
+  color: var(--secondary-text-color);
+  font-size: 1rem;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--console-hover);
+    color: var(--primary-text-color);
+  }
+}
+
+.sideBody {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: .5rem;
+}
+
+/* ---- explorer / snippets rows ------------------------------------------ */
+
+.fileRow,
+.snippetRow,
+.groupRow {
+  display: flex;
+  align-items: center;
+  gap: .4375rem;
+  height: 1.875rem;
+  padding: 0 .5rem 0 .875rem;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--console-hover);
+  }
+}
+
+.fileRowActive {
+  background-color: var(--console-active);
+}
+
+.fileIcon {
+  flex-shrink: 0;
+  color: var(--secondary-text-color);
+  font-size: 1rem;
+}
+
+.fileName {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rowAction {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: none;
+  border-radius: .1875rem;
+  background: transparent;
+  color: var(--secondary-text-color);
+  font-size: .875rem;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--console-hover);
+    color: var(--primary-text-color);
+  }
+
+  .fileRow:hover & {
+    display: flex;
+  }
+}
+
+/* ---- API panel --------------------------------------------------------- */
+
+.groupRow {
+  padding-inline-start: .5rem;
+}
+
+.groupName {
+  font-weight: 500;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--secondary-text-color);
+  font-size: .875rem;
+  transform: rotate(-90deg);
+  transition: transform .12s ease-out;
+}
+
+.chevronOpen {
+  transform: none;
+}
+
+.groupSummary {
+  padding: 0 .875rem .3125rem 2.375rem;
+  color: var(--secondary-text-color);
+  font-size: .6875rem;
+}
+
+.methodRow {
+  padding: .3125rem .875rem .3125rem 2.375rem;
+  cursor: pointer;
+  border-inline-start: 2px solid transparent;
+
+  &:hover {
+    background-color: var(--console-hover);
+    border-inline-start-color: var(--primary-color);
+  }
+}
+
+.methodSig {
+  display: block;
+  color: var(--code-function);
+  font-family: 'Roboto Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: .6875rem;
+  word-break: break-word;
+}
+
+.methodSummary {
+  display: block;
+  margin-top: .0625rem;
+  color: var(--secondary-text-color);
+  font-size: .6875rem;
+}
+
+.writeTag {
+  display: inline-block;
+  margin-top: .1875rem;
+  padding: 0 .3125rem;
+  border-radius: .1875rem;
+  background-color: rgba(var(--danger-color-rgb), .16);
+  color: var(--danger-color);
+  font-size: .625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+/* ---- editor area ------------------------------------------------------- */
+
+.editorArea {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.tabBar {
+  display: flex;
+  flex-shrink: 0;
+  overflow-x: auto;
+  background-color: var(--console-raised);
+  border-bottom: 1px solid var(--border-color);
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+  flex-shrink: 0;
+  height: 2.25rem;
+  padding: 0 .5rem 0 .75rem;
+  border-inline-end: 1px solid var(--border-color);
+  color: var(--secondary-text-color);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--primary-text-color);
+  }
+}
+
+.tabActive {
+  position: relative;
+  background-color: var(--background-color);
+  color: var(--primary-text-color);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background-color: var(--primary-color);
+  }
+}
+
+.tabIcon {
+  font-size: .9375rem;
+}
+
+.tabClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: none;
+  border-radius: .1875rem;
+  background: transparent;
   color: inherit;
   font-size: .8125rem;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--console-hover);
+  }
 }
 
-.hint {
-  padding: .5rem .75rem;
+/* ---- code surface ------------------------------------------------------
+ * `.code` is shared by the gutter, the highlight layer, the textarea and the
+ * output blocks. The two editor layers are stacked pixel-on-pixel, so ANY
+ * typography change has to happen here or they drift apart.
+ */
+
+.code {
+  margin: 0;
+  font-family: 'Roboto Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: .8125rem;
+  line-height: 1.5rem;
+  tab-size: 4;
+  font-variant-ligatures: none;
+}
+
+.editorWrap {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.gutter {
+  flex-shrink: 0;
+  overflow: hidden;
+  padding: .75rem .625rem .75rem .875rem;
+  color: var(--secondary-text-color);
+  text-align: end;
+  opacity: .55;
+  user-select: none;
+}
+
+.editorLayers {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.highlight,
+.editor {
+  position: absolute;
+  inset: 0;
+  padding: .75rem 1rem;
+  border: none;
+  white-space: pre;
+  overflow: auto;
+  overflow-wrap: normal;
+}
+
+.highlight {
+  pointer-events: none;
+  color: var(--primary-text-color);
+}
+
+.editor {
+  resize: none;
+  outline: none;
+  background: transparent;
+  // Text is invisible; the highlight layer underneath supplies the glyphs.
+  color: transparent;
+  caret-color: var(--primary-text-color);
+
+  &::selection {
+    background-color: rgba(var(--primary-color-rgb), .3);
+  }
+}
+
+// Until Prism resolves there is nothing underneath, so show the real text.
+.editorLoading {
+  color: var(--primary-text-color);
+}
+
+/* Prism tokens. Scoped to the console so message code blocks keep their own
+ * (deliberately quieter) styling from scss/components/_prism.scss. */
+
+.highlight :global(.prism-token.prism-comment),
+.highlight :global(.prism-token.prism-prolog),
+.highlight :global(.prism-token.prism-cdata) {
+  color: var(--code-comment);
+  font-style: italic;
+}
+
+.highlight :global(.prism-token.prism-keyword) {
+  color: var(--code-keyword);
+}
+
+.highlight :global(.prism-token.prism-builtin),
+.highlight :global(.prism-token.prism-boolean),
+.highlight :global(.prism-token.prism-constant) {
+  color: var(--code-builtin);
+}
+
+.highlight :global(.prism-token.prism-string),
+.highlight :global(.prism-token.prism-triple-quoted-string),
+.highlight :global(.prism-token.prism-char) {
+  color: var(--code-string);
+}
+
+.highlight :global(.prism-token.prism-number) {
+  color: var(--code-number);
+}
+
+.highlight :global(.prism-token.prism-function) {
+  color: var(--code-function);
+}
+
+.highlight :global(.prism-token.prism-class-name) {
+  color: var(--code-class);
+}
+
+.highlight :global(.prism-token.prism-decorator) {
+  color: var(--code-decorator);
+}
+
+.highlight :global(.prism-token.prism-operator) {
+  color: var(--code-operator);
+}
+
+.highlight :global(.prism-token.prism-punctuation) {
+  color: var(--secondary-text-color);
+}
+
+.highlight :global(.prism-token.prism-interpolation) {
+  color: var(--primary-text-color);
+}
+
+/* ---- output panel ------------------------------------------------------ */
+
+.resizer {
+  flex-shrink: 0;
+  height: 5px;
+  margin-top: -2px;
+  cursor: row-resize;
+  background: transparent;
+
+  &:hover {
+    background-color: var(--primary-color);
+  }
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-height: 0;
   border-top: 1px solid var(--border-color);
+  background-color: var(--background-color);
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+  height: 2.125rem;
+  padding: 0 .5rem 0 1rem;
+  background-color: var(--console-raised);
+}
+
+.panelTab {
+  color: var(--primary-text-color);
+  font-size: .6875rem;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--primary-color);
+  line-height: 2.125rem;
+}
+
+.panelTabProblem {
+  color: var(--danger-color);
+  border-bottom-color: transparent;
+}
+
+.output {
+  flex: 1;
+  overflow-y: auto;
+  padding: .5rem 1rem;
+  font-family: 'Roboto Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: .78125rem;
+  line-height: 1.5;
+}
+
+.outputEmpty {
+  color: var(--secondary-text-color);
+  font-family: inherit;
+}
+
+.line {
+  padding: .0625rem 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.levelWarn {
+  color: var(--code-number);
+}
+
+.levelError {
+  color: var(--danger-color);
+}
+
+.levelSystem {
+  color: var(--secondary-text-color);
+  font-style: italic;
+}
+
+// Every account mutation a script performs prints one of these, so a run that
+// wrote something never looks like a run that only read.
+.levelAudit {
+  color: var(--green-color);
+}
+
+.block {
+  margin: .375rem 0;
+  border: 1px solid var(--border-color);
+  border-radius: .375rem;
+  overflow: hidden;
+}
+
+.blockHead {
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+  padding: .3125rem .5rem;
+  background-color: var(--console-raised);
   color: var(--secondary-text-color);
   font-size: .75rem;
 }
 
-@media(max-width: 900px) {
-  .body {
-    flex-direction: column;
+.blockAction {
+  padding: .125rem .5rem;
+  border: none;
+  border-radius: .25rem;
+  background: transparent;
+  color: var(--primary-color);
+  font-size: .75rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--console-hover);
+  }
+}
+
+.blockBody {
+  max-height: 22rem;
+  overflow: auto;
+  padding: .5rem;
+  white-space: pre;
+}
+
+.tableWrap {
+  max-height: 22rem;
+  overflow: auto;
+}
+
+.table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: .71875rem;
+
+  th,
+  td {
+    max-width: 18rem;
+    padding: .25rem .5rem;
+    border-bottom: 1px solid var(--border-color);
+    overflow: hidden;
+    text-align: start;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .pane + .pane {
-    border-left: none;
-    border-top: 1px solid var(--border-color);
+  th {
+    position: sticky;
+    top: 0;
+    background-color: var(--background-color);
+    color: var(--secondary-text-color);
+    font-weight: 500;
+  }
+}
+
+/* ---- status bar -------------------------------------------------------- */
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: .125rem;
+  flex-shrink: 0;
+  height: 1.5rem;
+  padding: 0 .5rem;
+  background-color: var(--primary-color);
+  color: #fff;
+  font-size: .6875rem;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  height: 1.5rem;
+  padding: 0 .5rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: .6875rem;
+  font-family: inherit;
+  cursor: default;
+}
+
+button.statusItem {
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, .18);
+  }
+}
+
+.statusWrites {
+  background-color: var(--danger-color);
+
+  &:hover {
+    background-color: var(--danger-color);
+    filter: brightness(1.1);
+  }
+}
+
+.statusProblem {
+  font-weight: 500;
+}
+
+@media(max-width: 800px) {
+  .sideBar {
+    width: 13rem;
+  }
+
+  .titlePath {
+    display: none;
   }
 }

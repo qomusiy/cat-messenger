@@ -29,3 +29,7 @@ ignore
 /blob-report/
 
 .claude/bugs-cache
+
+# Pyodide runtime for the script console — mirrored from node_modules by
+# scripts/sync-pyodide.mjs on every start/build, so it never needs committing.
+/public/pyodide
